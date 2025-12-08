@@ -1,116 +1,101 @@
 <?php
 require 'koneksi.php';
-require 'header.php'; // Panggil header
+require 'header.php';
 
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
-// LOGIKA TAMBAH LAPORAN
-if (isset($_POST['submit_laporan'])) {
-    // Cek Login Dulu
-    if (!isset($_SESSION['role'])) {
-        echo "<script>alert('Anda harus login untuk melapor!'); window.location='login.php';</script>";
-        exit;
-    }
-
-    $judul       = htmlspecialchars($_POST['judul']);
-    $id_kategori = $_POST['id_kategori'];
-    $deskripsi   = htmlspecialchars($_POST['deskripsi']);
-    $id_masyarakat = $_SESSION['id_masyarakat'] ?? 0; // Ambil ID dari session
-
-    // Jika user adalah petugas, kita block atau set id dummy (opsional)
-    if ($_SESSION['role'] != 'masyarakat') {
-        echo "<script>alert('Petugas tidak dapat membuat laporan pengaduan.'); window.location='index.php';</script>";
-        exit;
-    }
-
-    $status = "Diajukan";
-    $sql = "INSERT INTO laporan (id_masyarakat, id_kategori, judul, deskripsi, status) 
-            VALUES ('$id_masyarakat', '$id_kategori', '$judul', '$deskripsi', '$status')";
-
-    if (mysqli_query($conn, $sql)) {
-        echo "<script>alert('Laporan Berhasil Dikirim!'); window.location='lihat_laporan.php';</script>";
-    } else {
-        echo "<script>alert('Gagal: " . mysqli_error($conn) . "');</script>";
-    }
-}
+// Hitung Statistik Sederhana
+$total_laporan = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM laporan"));
+$laporan_selesai = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM laporan WHERE status='Selesai'"));
 ?>
 
-<section class="py-5" style="background: linear-gradient(135deg, #d71149 0%, #a80a35 100%); color: white; margin-top: -1px;">
+<section class="py-5 bg-white border-bottom">
     <div class="container">
-        <div class="text-center mb-5">
-            <h1 class="fw-bold display-5">LAYANAN ASPIRASI DAN PENGADUAN ONLINE RAKYAT</h1>
-            <p class="lead opacity-75">Sampaikan laporan Anda langsung kepada instansi pemerintah berwenang</p>
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-5 fw-bold text-dark mb-3">Layanan Aspirasi & Pengaduan Masyarakat Desa</h1>
+                <p class="lead text-muted mb-4">Sampaikan masalah di lingkungan Anda (jalan rusak, keamanan, administrasi) agar segera ditindaklanjuti oleh perangkat desa.</p>
+                <div class="d-flex gap-3">
+                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'masyarakat'): ?>
+                        <a href="buat_laporan.php" class="btn btn-utama btn-lg shadow">
+                            <i class="fas fa-pen-nib me-2"></i>Buat Laporan Sekarang
+                        </a>
+                    <?php else: ?>
+                        <a href="login.php" class="btn btn-utama btn-lg shadow">
+                            <i class="fas fa-sign-in-alt me-2"></i>Masuk untuk Melapor
+                        </a>
+                        <a href="register.php" class="btn btn-outline-primary btn-lg">Daftar Akun</a>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center mt-4 mt-lg-0">
+                <img src="https://img.freepik.com/free-vector/village-landscape-illustration_1284-58580.jpg" alt="Ilustrasi Desa" class="img-fluid rounded-4 shadow-sm" style="max-height: 400px;">
+            </div>
         </div>
+    </div>
+</section>
 
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card shadow-lg border-0" style="border-radius: 15px;">
-                    <div class="card-body p-4 text-dark">
-                        <div class="border-bottom mb-3 pb-2">
-                            <h4 class="text-merah fw-bold"><i class="fas fa-pen-square"></i> Tulis Laporan</h4>
-                        </div>
-                        
-                        <form method="POST" action="">
-                            <div class="mb-3">
-                                <label class="fw-bold mb-1">Judul Laporan</label>
-                                <input type="text" name="judul" class="form-control" placeholder="Ketik Judul Laporan Anda *" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="fw-bold mb-1">Isi Laporan</label>
-                                <textarea name="deskripsi" class="form-control" rows="5" placeholder="Ketik Isi Laporan Anda *" required></textarea>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-8 mb-3">
-                                    <label class="fw-bold mb-1">Kategori</label>
-                                    <select class="form-select" name="id_kategori" required>
-                                        <option value="">-- Pilih Kategori --</option>
-                                        <?php
-                                        $qKat = mysqli_query($conn, "SELECT * FROM kategori ORDER BY jenis_laporan");
-                                        while ($k = mysqli_fetch_assoc($qKat)) {
-                                            echo "<option value='{$k['id_kategori']}'>{$k['jenis_laporan']}</option>";
-                                        }
-                                        ?>
-                                    </select>
-                                </div>
-                                <div class="col-md-4 d-grid align-items-end mb-3">
-                                    <button type="submit" name="submit_laporan" class="btn btn-lapor py-2 shadow">
-                                        LAPOR!
-                                    </button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
+<section class="py-5" style="background-color: #f8f9fa;">
+    <div class="container">
+        <div class="row text-center justify-content-center">
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <h2 class="fw-bold text-primary"><?= $total_laporan; ?></h2>
+                    <p class="text-muted mb-0">Laporan Masuk</p>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="card border-0 shadow-sm p-3">
+                    <h2 class="fw-bold text-success"><?= $laporan_selesai; ?></h2>
+                    <p class="text-muted mb-0">Laporan Selesai</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<section class="container py-5 text-center">
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <i class="fas fa-check-circle fa-3x text-merah mb-3"></i>
-            <h5>Mudah & Cepat</h5>
-            <p class="text-muted">Laporkan keluhan Anda dengan langkah yang sangat mudah.</p>
-        </div>
-        <div class="col-md-4 mb-4">
-            <i class="fas fa-user-shield fa-3x text-merah mb-3"></i>
-            <h5>Rahasia Terjamin</h5>
-            <p class="text-muted">Identitas pelapor aman dan dilindungi.</p>
-        </div>
-        <div class="col-md-4 mb-4">
-            <i class="fas fa-reply-all fa-3x text-merah mb-3"></i>
-            <h5>Pasti Ditanggapi</h5>
-            <p class="text-muted">Laporan Anda akan diverifikasi dan ditindaklanjuti.</p>
+<section class="py-5 bg-white">
+    <div class="container">
+        <h3 class="text-center fw-bold mb-5">Bagaimana Cara Melapor?</h3>
+        <div class="row text-center">
+            <div class="col-md-3">
+                <div class="mb-3"><i class="fas fa-edit fa-3x text-primary"></i></div>
+                <h5>1. Tulis Laporan</h5>
+                <p class="small text-muted">Laporkan keluhan Anda dengan jelas dan lengkap.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3"><i class="fas fa-share-square fa-3x text-primary"></i></div>
+                <h5>2. Proses Verifikasi</h5>
+                <p class="small text-muted">Admin desa akan memverifikasi dan meneruskan laporan.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3"><i class="fas fa-tools fa-3x text-primary"></i></div>
+                <h5>3. Tindak Lanjut</h5>
+                <p class="small text-muted">Petugas terkait akan menindaklanjuti laporan Anda.</p>
+            </div>
+            <div class="col-md-3">
+                <div class="mb-3"><i class="fas fa-check-circle fa-3x text-success"></i></div>
+                <h5>4. Selesai</h5>
+                <p class="small text-muted">Laporan selesai dan Anda mendapat notifikasi.</p>
+            </div>
         </div>
     </div>
 </section>
 
-</div> <?php
-// Panggil file footer yang baru dibuat
-require 'footer.php'; 
-?>
+<section id="kontak" class="py-5 text-white" style="background: #2c3e50;">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <h4>Kantor Kepala Desa</h4>
+                <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i> Jl. Raya Desa No. 1, Kecamatan X</p>
+                <p class="mb-1"><i class="fas fa-phone me-2"></i> 0812-3456-7890 (WhatsApp)</p>
+                <p><i class="fas fa-envelope me-2"></i> admin@desamaju.id</p>
+            </div>
+            <div class="col-md-6 text-md-end align-self-center">
+                <small>&copy; <?= date('Y'); ?> Sistem Informasi Desa. All rights reserved.</small>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -29,8 +29,8 @@ $nama_desa = "Sistem Lapor Desa";
 
 <nav class="navbar navbar-expand-lg navbar-desa sticky-top">
   <div class="container">
-    <a class="navbar-brand" href="index.php">
-        <i class="fas fa-building me-2"></i><?= $nama_desa; ?>
+    <a class="navbar-brand fw-bold text-primary" href="index.php">
+     <i class="fas fa-clipboard-list me-2"></i> Izin Lapor
     </a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>

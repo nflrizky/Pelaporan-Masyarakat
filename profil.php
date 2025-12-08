@@ -12,22 +12,26 @@ $id = $_SESSION['id_masyarakat'];
 // PROSES UPDATE
 if (isset($_POST['update'])) {
     $nama   = htmlspecialchars($_POST['nama']);
-    $telp   = htmlspecialchars($_POST['telp']);
+    // Kita tetap pakai variabel $telp untuk menampung inputan, tapi nanti disimpan ke kolom no_hp
+    $telp   = htmlspecialchars($_POST['telp']); 
     $alamat = htmlspecialchars($_POST['alamat']);
     $pass   = $_POST['password'];
 
     // Cek apakah ganti password
     if (!empty($pass)) {
-        $sql = "UPDATE masyarakat SET nama='$nama', telp='$telp', no_hp='$telp', alamat='$alamat', password='$pass' WHERE id_masyarakat='$id'";
+        // PERBAIKAN: Hapus "telp='$telp'," karena kolom itu tidak ada di database.
+        // Gunakan no_hp='$telp'
+        $sql = "UPDATE masyarakat SET nama='$nama', no_hp='$telp', alamat='$alamat', password='$pass' WHERE id_masyarakat='$id'";
     } else {
-        $sql = "UPDATE masyarakat SET nama='$nama', telp='$telp', no_hp='$telp', alamat='$alamat' WHERE id_masyarakat='$id'";
+        // PERBAIKAN: Sama seperti diatas, hapus "telp='$telp',"
+        $sql = "UPDATE masyarakat SET nama='$nama', no_hp='$telp', alamat='$alamat' WHERE id_masyarakat='$id'";
     }
 
     if (mysqli_query($conn, $sql)) {
         $_SESSION['nama_masyarakat'] = $nama; // Update session nama
         echo "<script>alert('Profil berhasil diperbarui!'); window.location='profil.php';</script>";
     } else {
-        echo "<script>alert('Gagal update.');</script>";
+        echo "<script>alert('Gagal update. Error: " . mysqli_error($conn) . "');</script>";
     }
 }
 
@@ -53,7 +57,7 @@ $data = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM masyarakat WHERE i
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Nomor HP / WA</label>
-                            <input type="text" name="telp" class="form-control" value="<?= $data['telp'] ?? $data['no_hp']; ?>" required>
+                            <input type="text" name="telp" class="form-control" value="<?= $data['no_hp']; ?>" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Alamat</label>

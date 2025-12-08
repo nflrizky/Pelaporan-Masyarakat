@@ -22,7 +22,7 @@ if (isset($_POST['login'])) {
             header("Location: index.php");
             exit;
         } else {
-            $error = "Email atau Password Ketua salah.";
+            $error = "Email atau Password Petugas salah.";
         }
 
     } else {
@@ -38,7 +38,7 @@ if (isset($_POST['login'])) {
             header("Location: index.php");
             exit;
         } else {
-            $error = "Email atau Password Anggota salah.";
+            $error = "Email atau Password Masyarakat salah.";
         }
     }
 }
@@ -48,13 +48,14 @@ if (isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Izin Lapor Ketua</title>
+    <title>Login | Izin Lapor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
         body {
-            background: linear-gradient(135deg, #d71149 0%, #a80a35 100%);
+            /* UBAH: Gradasi Biru */
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -74,21 +75,24 @@ if (isset($_POST['login'])) {
             padding: 30px 20px 10px;
             text-align: center;
         }
-        .text-merah { color: #d71149; }
-        .btn-merah {
-            background-color: #d71149;
+        /* UBAH: Warna Teks Biru */
+        .text-biru { color: #0d6efd; }
+        
+        /* UBAH: Tombol Biru Custom */
+        .btn-biru {
+            background-color: #0d6efd;
             color: white;
             font-weight: bold;
             border: none;
         }
-        .btn-merah:hover { background-color: #b30d3b; color: white;}
+        .btn-biru:hover { background-color: #0b5ed7; color: white;}
     </style>
 </head>
 <body>
 
     <div class="card card-login">
         <div class="login-header">
-            <h2 class="fw-bold text-merah display-6"><i class="fas fa-clipboard-list"></i> Izin Lapor</h2>
+            <h2 class="fw-bold text-biru display-6"><i class="fas fa-clipboard-list"></i> Izin Lapor</h2>
             <p class="text-muted small">Silakan login untuk melanjutkan</p>
         </div>
         
@@ -121,16 +125,16 @@ if (isset($_POST['login'])) {
                     <div class="row g-2">
                         <div class="col-6">
                             <input type="radio" class="btn-check" name="role" id="role1" value="masyarakat" checked>
-                            <label class="btn btn-outline-danger w-100 btn-sm py-2" for="role1">Anggota / Staf</label>
+                            <label class="btn btn-outline-primary w-100 btn-sm py-2" for="role1">Masyarakat</label>
                         </div>
                         <div class="col-6">
                             <input type="radio" class="btn-check" name="role" id="role2" value="petugas">
-                            <label class="btn btn-outline-danger w-100 btn-sm py-2" for="role2">Ketua / Pimpinan</label>
+                            <label class="btn btn-outline-primary w-100 btn-sm py-2" for="role2">Admin/Petugas</label>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" name="login" class="btn btn-merah w-100 py-2">MASUK</button>
+                <button type="submit" name="login" class="btn btn-biru w-100 py-2">MASUK</button>
             </form>
             
             <div class="text-center mt-4">

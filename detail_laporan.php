@@ -15,14 +15,43 @@ if (isset($_POST['proses_admin'])) {
     $id_petugas  = $_SESSION['id_petugas'];
     $tgl_respon  = date('Y-m-d');
 
+    // Proses Upload Bukti
+    $nama_bukti = '';
+    if (isset($_FILES['bukti']) && $_FILES['bukti']['error'] == 0) {
+        $allowed_ext = ['jpg', 'jpeg', 'png', 'gif'];
+        $ext = strtolower(pathinfo($_FILES['bukti']['name'], PATHINFO_EXTENSION));
+        
+        if (in_array($ext, $allowed_ext)) {
+            // Pastikan folder upload ada
+            if (!is_dir('upload')) {
+                mkdir('upload', 0777, true);
+            }
+
+            $nama_bukti = time() . "_bukti_" . $id . "." . $ext;
+            $tujuan = 'upload/' . $nama_bukti;
+            
+            if (!move_uploaded_file($_FILES['bukti']['tmp_name'], $tujuan)) {
+                $nama_bukti = ''; // Gagal upload
+            }
+        }
+    }
+
     // 1. Update status laporan
     mysqli_query($conn, "UPDATE laporan SET status='$status_baru' WHERE id_laporan='$id'");
 
-    // 2. Insert ke tabel tanggapan
-    if (!empty($tanggapan)) {
-        $sql_tanggapan = "INSERT INTO tanggapan (id_laporan, tgl_tanggapan, tanggapan, id_petugas) 
-                          VALUES ('$id', '$tgl_respon', '$tanggapan', '$id_petugas')";
-        mysqli_query($conn, $sql_tanggapan);
+    // 2. Insert ke tabel tanggapan (dengan bukti)
+    // Asumsi tabel tanggapan memiliki kolom 'bukti' sesuai referensi dari file proses_status.php
+    // 2. Insert ke tabel tanggapan (Update: Sesuaikan nama kolom dengan database)
+    if (!empty($tanggapan) || !empty($nama_bukti)) {
+        // Perbaikan: Kolom 'tanggapan' diganti 'catatan', 'tgl_tanggapan' diganti 'waktu_tanggapan'
+        // Kolom 'bukti' wajib ada di database.
+        $sql_tanggapan = "INSERT INTO tanggapan (id_laporan, id_petugas, waktu_tanggapan, catatan, bukti) 
+                          VALUES ('$id', '$id_petugas', NOW(), '$tanggapan', '$nama_bukti')";
+        
+        // Tambahkan pengecekan error agar tahu jika masih ada masalah
+        if (!mysqli_query($conn, $sql_tanggapan)) {
+            die("Gagal menyimpan tanggapan. Error Database: " . mysqli_error($conn));
+        }
     }
 
     echo "<script>alert('Laporan berhasil diproses!'); window.location='detail_laporan.php?id=$id';</script>";
@@ -42,9 +71,6 @@ $is_admin = (isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESS
 $is_owner = (isset($_SESSION['id_masyarakat']) && $_SESSION['id_masyarakat'] == $data['id_masyarakat']);
 
 if ($data['tipe_laporan'] == 'Rahasia' && !$is_admin && !$is_owner) {
-    // Redirect atau sembunyikan
-    // Opsional: header("Location: index.php"); exit; 
-    // Disini kita samarkan saja:
     $data['nama_pelapor'] = "Pelapor Rahasia";
     $data['nik'] = "********";
     $data['no_hp'] = "-";
@@ -87,15 +113,31 @@ if ($data['tipe_laporan'] == 'Rahasia' && !$is_admin && !$is_owner) {
                 <div class="card-header bg-white fw-bold"><i class="fas fa-comments me-2"></i> Tindak Lanjut & Tanggapan</div>
                 <div class="card-body">
                     <?php
+                    // Perbaikan: Select 'catatan' dan urutkan berdasarkan 'waktu_tanggapan'
                     $sqlt = "SELECT t.*, p.nama_petugas FROM tanggapan t 
                              JOIN petugas p ON t.id_petugas = p.id_petugas 
-                             WHERE t.id_laporan='$id' ORDER BY t.tgl_tanggapan DESC, t.id_tanggapan DESC";
+                             WHERE t.id_laporan='$id' ORDER BY t.waktu_tanggapan DESC, t.id_tanggapan DESC";
                     $qt = mysqli_query($conn, $sqlt);
+                    
                     if(mysqli_num_rows($qt) > 0) {
                         while($t = mysqli_fetch_assoc($qt)) {
                             echo "<div class='alert alert-light border mb-2'>";
-                            echo "<strong class='text-primary'>{$t['nama_petugas']}</strong> <small class='text-muted float-end'>".date('d/m/Y', strtotime($t['tgl_tanggapan']))."</small>";
-                            echo "<p class='mb-0 mt-1'>{$t['tanggapan']}</p>";
+                            
+                            // Perbaikan: Gunakan $t['waktu_tanggapan']
+                            echo "<strong class='text-primary'>{$t['nama_petugas']}</strong> <small class='text-muted float-end'>".date('d/m/Y H:i', strtotime($t['waktu_tanggapan']))."</small>";
+                            
+                            // Perbaikan: Gunakan $t['catatan'] (bukan $t['tanggapan'])
+                            echo "<p class='mb-0 mt-1'>{$t['catatan']}</p>";
+                            
+                            // Tampilkan Bukti Gambar
+                            if (!empty($t['bukti'])) {
+                                echo "<div class='mt-2'>
+                                        <small class='fw-bold text-muted'>Bukti Penyelesaian:</small><br>
+                                        <a href='upload/{$t['bukti']}' target='_blank'>
+                                            <img src='upload/{$t['bukti']}' class='img-fluid rounded border mt-1' style='max-width: 200px;'>
+                                        </a>
+                                      </div>";
+                            }
                             echo "</div>";
                         }
                     } else {
@@ -132,7 +174,7 @@ if ($data['tipe_laporan'] == 'Rahasia' && !$is_admin && !$is_owner) {
             <div class="card shadow border-0 bg-light">
                 <div class="card-body">
                     <h5 class="fw-bold mb-3">Verifikasi & Proses</h5>
-                    <form method="POST">
+                    <form method="POST" enctype="multipart/form-data">
                         <div class="mb-3">
                             <label class="fw-bold small">Update Status</label>
                             <select name="status" class="form-select">
@@ -146,6 +188,12 @@ if ($data['tipe_laporan'] == 'Rahasia' && !$is_admin && !$is_owner) {
                             <label class="fw-bold small">Isi Tanggapan / Catatan</label>
                             <textarea name="tanggapan" class="form-control" rows="4" placeholder="Tulis catatan tindak lanjut disini..."></textarea>
                         </div>
+                        <div class="mb-3">
+                            <label class="fw-bold small">Bukti Penyelesaian (Gambar)</label>
+                            <input type="file" name="bukti" class="form-control" accept="image/*">
+                            <small class="text-muted" style="font-size: 0.75rem;">Format: JPG, PNG, GIF</small>
+                        </div>
+                        
                         <button type="submit" name="proses_admin" class="btn btn-primary w-100 fw-bold">
                             <i class="fas fa-save me-1"></i> Simpan Perubahan
                         </button>

@@ -2,100 +2,138 @@
 require 'koneksi.php';
 require 'header.php';
 
-// Hitung Statistik Sederhana
-$total_laporan = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM laporan"));
-$laporan_selesai = mysqli_num_rows(mysqli_query($conn, "SELECT * FROM laporan WHERE status='Selesai'"));
+// Mengambil data statistik singkat
+$get_masyarakat = mysqli_query($conn, "SELECT * FROM masyarakat");
+$jml_masyarakat = mysqli_num_rows($get_masyarakat);
+
+$get_laporan = mysqli_query($conn, "SELECT * FROM laporan");
+$jml_laporan = mysqli_num_rows($get_laporan);
+
+$get_selesai = mysqli_query($conn, "SELECT * FROM laporan WHERE status='Selesai'");
+$jml_selesai = mysqli_num_rows($get_selesai);
 ?>
 
-<section class="py-5 bg-white border-bottom">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-lg-6">
-                <h1 class="display-5 fw-bold text-dark mb-3">Layanan Aspirasi & Pengaduan Masyarakat Desa</h1>
-                <p class="lead text-muted mb-4">Sampaikan masalah di lingkungan Anda (jalan rusak, keamanan, administrasi) agar segera ditindaklanjuti oleh perangkat desa.</p>
-                <div class="d-flex gap-3">
-                    <?php if (isset($_SESSION['role']) && $_SESSION['role'] == 'masyarakat'): ?>
-                        <a href="buat_laporan.php" class="btn btn-utama btn-lg shadow">
-                            <i class="fas fa-pen-nib me-2"></i>Buat Laporan Sekarang
+<div class="bg-primary text-white py-5 mb-5" style="background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);">
+    <div class="container py-5">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6 text-center text-lg-start">
+                <h1 class="display-4 fw-bold mb-3">Layanan Aspirasi & Pengaduan Desa</h1>
+                <p class="lead mb-4 text-white-50">Sampaikan laporan Anda terkait infrastruktur, pelayanan, atau kejadian di sekitar Anda. Kami siap melayani demi kemajuan desa bersama.</p>
+                <div class="d-grid gap-2 d-sm-flex justify-content-sm-center justify-content-lg-start">
+                    <?php if (isset($_SESSION['role'])): ?>
+                        <a href="buat_laporan.php" class="btn btn-light btn-lg px-4 fw-bold text-primary rounded-pill shadow-sm">
+                            <i class="fas fa-pen me-2"></i>Tulis Laporan
+                        </a>
+                        <a href="riwayat_laporan.php" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                            Riwayat Saya
                         </a>
                     <?php else: ?>
-                        <a href="login.php" class="btn btn-utama btn-lg shadow">
+                        <a href="login.php" class="btn btn-light btn-lg px-4 fw-bold text-primary rounded-pill shadow-sm">
                             <i class="fas fa-sign-in-alt me-2"></i>Masuk untuk Melapor
                         </a>
-                        <a href="register.php" class="btn btn-outline-primary btn-lg">Daftar Akun</a>
+                        <a href="register.php" class="btn btn-outline-light btn-lg px-4 rounded-pill">
+                            Daftar Akun
+                        </a>
                     <?php endif; ?>
                 </div>
             </div>
-            <div class="col-lg-6 text-center mt-4 mt-lg-0">
-                <img src="https://img.freepik.com/free-vector/village-landscape-illustration_1284-58580.jpg" alt="Ilustrasi Desa" class="img-fluid rounded-4 shadow-sm" style="max-height: 400px;">
-            </div>
+            <div class="col-lg-6 text-center">
+    <img src="foto/ilustrasi_depan.png" 
+         class="img-fluid opacity-90" 
+         style="max-height: 350px; transform: rotate(0deg); filter: drop-shadow(0 10px 5px rgba(0,0,0,0.2));" 
+         alt="Ilustrasi Layanan">
+</div>
         </div>
     </div>
-</section>
+</div>
 
-<section class="py-5" style="background-color: #f8f9fa;">
-    <div class="container">
-        <div class="row text-center justify-content-center">
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm p-3">
-                    <h2 class="fw-bold text-primary"><?= $total_laporan; ?></h2>
-                    <p class="text-muted mb-0">Laporan Masuk</p>
+<div class="container mb-5">
+    <div class="row g-4 justify-content-center">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 text-center py-4 hover-card">
+                <div class="card-body">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold"><?= $jml_masyarakat; ?></h3>
+                    <p class="text-muted mb-0">Masyarakat Terdaftar</p>
                 </div>
             </div>
-            <div class="col-md-3 mb-3">
-                <div class="card border-0 shadow-sm p-3">
-                    <h2 class="fw-bold text-success"><?= $laporan_selesai; ?></h2>
-                    <p class="text-muted mb-0">Laporan Selesai</p>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 text-center py-4 hover-card">
+                <div class="card-body">
+                    <div class="bg-warning bg-opacity-10 text-warning rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="fas fa-file-alt fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold"><?= $jml_laporan; ?></h3>
+                    <p class="text-muted mb-0">Total Laporan Masuk</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 text-center py-4 hover-card">
+                <div class="card-body">
+                    <div class="bg-success bg-opacity-10 text-success rounded-circle d-inline-flex p-3 mb-3">
+                        <i class="fas fa-check-circle fa-2x"></i>
+                    </div>
+                    <h3 class="fw-bold"><?= $jml_selesai; ?></h3>
+                    <p class="text-muted mb-0">Laporan Diselesaikan</p>
                 </div>
             </div>
         </div>
     </div>
-</section>
+</div>
 
-<section class="py-5 bg-white">
+<div class="bg-light py-5">
     <div class="container">
-        <h3 class="text-center fw-bold mb-5">Bagaimana Cara Melapor?</h3>
-        <div class="row text-center">
-            <div class="col-md-3">
-                <div class="mb-3"><i class="fas fa-edit fa-3x text-primary"></i></div>
-                <h5>1. Tulis Laporan</h5>
-                <p class="small text-muted">Laporkan keluhan Anda dengan jelas dan lengkap.</p>
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Alur Pengaduan</h2>
+            <p class="text-muted">Proses pelaporan cepat, transparan, dan mudah.</p>
+        </div>
+        
+        <div class="row g-4 text-center justify-content-center position-relative">
+            <div class="col-md-3 position-relative" style="z-index: 1;">
+                <div class="pt-3"> <div class="bg-light border border-4 border-primary rounded-circle d-inline-flex p-3 mb-3 text-primary">
+                        <i class="fas fa-pen-fancy fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">1. Tulis Laporan</h5>
+                    <p class="small text-muted mb-0">Laporkan keluhan atau aspirasi Anda dengan jelas dan lengkap.</p>
+                </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-3"><i class="fas fa-share-square fa-3x text-primary"></i></div>
-                <h5>2. Proses Verifikasi</h5>
-                <p class="small text-muted">Admin desa akan memverifikasi dan meneruskan laporan.</p>
+
+            <div class="col-md-3 position-relative" style="z-index: 1;">
+                <div class="pt-3">
+                    <div class="bg-light border border-4 border-primary rounded-circle d-inline-flex p-3 mb-3 text-primary">
+                        <i class="fas fa-search fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">2. Verifikasi</h5>
+                    <p class="small text-muted mb-0">Laporan diverifikasi kebenarannya oleh petugas terkait.</p>
+                </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-3"><i class="fas fa-tools fa-3x text-primary"></i></div>
-                <h5>3. Tindak Lanjut</h5>
-                <p class="small text-muted">Petugas terkait akan menindaklanjuti laporan Anda.</p>
+
+            <div class="col-md-3 position-relative" style="z-index: 1;">
+                <div class="pt-3">
+                    <div class="bg-light border border-4 border-primary rounded-circle d-inline-flex p-3 mb-3 text-primary">
+                        <i class="fas fa-tools fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2">3. Tindak Lanjut</h5>
+                    <p class="small text-muted mb-0">Petugas melakukan penanganan masalah secara langsung.</p>
+                </div>
             </div>
-            <div class="col-md-3">
-                <div class="mb-3"><i class="fas fa-check-circle fa-3x text-success"></i></div>
-                <h5>4. Selesai</h5>
-                <p class="small text-muted">Laporan selesai dan Anda mendapat notifikasi.</p>
+
+            <div class="col-md-3 position-relative" style="z-index: 1;">
+                <div class="pt-3">
+                    <div class="bg-success text-white border border-4 border-white rounded-circle d-inline-flex p-3 mb-3 shadow-sm">
+                        <i class="fas fa-check fa-2x"></i>
+                    </div>
+                    <h5 class="fw-bold mt-2 text-success">4. Selesai</h5>
+                    <p class="small text-muted mb-0">Laporan selesai dan Anda akan menerima notifikasi.</p>
+                </div>
             </div>
+
         </div>
     </div>
-</section>
+</div>
 
-<section id="kontak" class="py-5 text-white" style="background: #2c3e50;">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6">
-                <h4>Kantor Kepala Desa</h4>
-                <p class="mb-1"><i class="fas fa-map-marker-alt me-2"></i> Jl. Raya Desa No. 1, Kecamatan X</p>
-                <p class="mb-1"><i class="fas fa-phone me-2"></i> 0812-3456-7890 (WhatsApp)</p>
-                <p><i class="fas fa-envelope me-2"></i> admin@desamaju.id</p>
-            </div>
-            <div class="col-md-6 text-md-end align-self-center">
-                <small>&copy; <?= date('Y'); ?> Sistem Informasi Desa. All rights reserved.</small>
-            </div>
-        </div>
-    </div>
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+<?php require 'footer.php'; ?>

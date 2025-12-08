@@ -40,7 +40,11 @@ $nama_desa = "Sistem Lapor Desa";
       <ul class="navbar-nav ms-auto align-items-center">
         
         <li class="nav-item"><a class="nav-link" href="index.php">Beranda</a></li>
-        <li class="nav-item"><a class="nav-link" href="panduan.php">Panduan</a></li> <li class="nav-item"><a class="nav-link" href="lihat_laporan.php">Laporan Publik</a></li>
+        <li class="nav-item"><a class="nav-link" href="panduan.php">Panduan</a></li>
+        
+        <?php if (!isset($_SESSION['role']) || $_SESSION['role'] == 'masyarakat'): ?>
+            <li class="nav-item"><a class="nav-link" href="lihat_laporan.php">Laporan Publik</a></li>
+        <?php endif; ?>
         
         <?php if (!isset($_SESSION['role'])): ?>
             <li class="nav-item"><a class="nav-link" href="#kontak">Kontak</a></li>

@@ -1,129 +1,112 @@
 <?php
-session_start();
 require 'koneksi.php';
-require 'fungsi_status.php';
+require 'header.php';
 
-// 1. Belum login -> ke login
-if (!isset($_SESSION['role'])) {
-    header("Location: login.php");
-    exit;
-}
+$id = $_GET['id'];
+// Ambil Data Laporan
+$sql = "SELECT l.*, k.jenis_laporan, m.nama AS nama_pelapor 
+        FROM laporan l 
+        LEFT JOIN kategori k ON l.id_kategori = k.id_kategori
+        LEFT JOIN masyarakat m ON l.id_masyarakat = m.id_masyarakat
+        WHERE l.id_laporan = '$id'";
+$query = mysqli_query($conn, $sql);
+$data = mysqli_fetch_assoc($query);
 
-// 2. Kalau login sebagai masyarakat -> tolak & balik ke index
-if ($_SESSION['role'] === 'masyarakat') {
-    echo "<script>
-            alert('Anda tidak memiliki akses ke halaman ini. Halaman ini hanya untuk Admin dan Petugas.');
-            window.location.href = 'index.php';
-          </script>";
-    exit;
-}
-
-// 3. Kalau bukan admin dan bukan petugas (misal role aneh) -> tolak juga
-if (!in_array($_SESSION['role'], ['admin', 'petugas'])) {
-    echo "<script>
-            alert('Akses ditolak!');
-            window.location.href = 'index.php';
-          </script>";
-    exit;
-}
-
-// ====== lanjut kode detail_laporan di bawah ini ======
-$id_laporan = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if ($id_laporan <= 0) {
-    die('ID laporan tidak valid');
-}
-
-$sql  = "SELECT l.*, k.jenis_laporan, m.nama AS nama_pelapor
-         FROM laporan l
-         JOIN kategori k ON l.id_kategori = k.id_kategori
-         JOIN masyarakat m ON l.id_masyarakat = m.id_masyarakat
-         WHERE l.id_laporan = '$id_laporan'";
-$hasil   = mysqli_query($conn, $sql);
-$laporan = mysqli_fetch_assoc($hasil);
-
-if (!$laporan) {
-    die('Laporan tidak ditemukan');
-}
-
-$allowed         = allowedTransitions();
-$status_sekarang = $laporan['status'];
-$status_boleh    = $allowed[$status_sekarang];
+// Warna Status
+$statusColor = 'bg-secondary';
+if($data['status'] == 'Proses') $statusColor = 'bg-primary';
+if($data['status'] == 'Selesai') $statusColor = 'bg-success';
+if($data['status'] == 'Ditolak') $statusColor = 'bg-danger';
 ?>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Detail Laporan</title>
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-</head>
-<body>
-<div class="container mt-4">
-    <h3>Detail Laporan</h3>
-    <p><b>Judul:</b> <?= $laporan['judul']; ?></p>
-    <p><b>Pelapor:</b> <?= $laporan['nama_pelapor']; ?></p>
-    <p><b>Kategori:</b> <?= $laporan['jenis_laporan']; ?></p>
-    <p><b>Status:</b> <span class="text-dark"><?= $laporan['status']; ?></span></p>
-    <p><b>Deskripsi:</b><br><?= nl2br($laporan['deskripsi']); ?></p>
 
-    <hr>
-    <h5>Ubah Status</h5>
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <a href="lihat_laporan.php" class="text-decoration-none text-muted mb-3 d-inline-block">
+                <i class="fas fa-arrow-left"></i> Kembali ke Daftar
+            </a>
 
-    <?php if (empty($status_boleh)) : ?>
-        <p>Status sudah <b>final</b>, tidak dapat diubah lagi.</p>
-    <?php else : ?>
-        <form action="proses_status.php" method="POST" enctype="multipart/form-data">
-            <input type="hidden" name="id_laporan" value="<?= $id_laporan; ?>">
-            <input type="hidden" name="status_lama" value="<?= $status_sekarang; ?>">
+            <div class="card shadow border-0 rounded-3 overflow-hidden">
+                <div class="card-header bg-white border-bottom p-4">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h3 class="fw-bold text-dark mb-1"><?= htmlspecialchars($data['judul']); ?></h3>
+                            <div class="text-muted small">
+                                <i class="fas fa-user me-1"></i> <?= $data['nama_pelapor']; ?> &bull; 
+                                <i class="fas fa-calendar me-1"></i> <?= $data['tgl_pengaduan']; ?>
+                            </div>
+                        </div>
+                        <span class="badge <?= $statusColor; ?> fs-6 px-3 py-2 rounded-pill"><?= $data['status']; ?></span>
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label>Status Baru</label>
-                <select name="status_baru" class="form-control">
-                    <?php foreach ($status_boleh as $s) : ?>
-                        <option value="<?= $s; ?>"><?= $s; ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-merah">ISI LAPORAN</h6>
+                    <p class="text-secondary" style="line-height: 1.6; white-space: pre-line;">
+                        <?= htmlspecialchars($data['deskripsi']); ?>
+                    </p>
+                    
+                    <div class="mt-4 pt-3 border-top">
+                        <span class="badge bg-light text-dark border">
+                            <i class="fas fa-tag me-1"></i> Kategori: <?= $data['jenis_laporan']; ?>
+                        </span>
+                        
+                        <?php if(!empty($data['foto'])): ?>
+                            <div class="mt-3">
+                                <img src="foto/<?= $data['foto']; ?>" class="img-fluid rounded shadow-sm" style="max-height:300px;">
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+                <div class="card-footer bg-light p-4">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-comments"></i> Tindak Lanjut / Tanggapan</h5>
+                    
+                    <?php 
+                    // Ambil Tanggapan
+                    $sqlt = "SELECT t.*, p.nama_petugas 
+                             FROM tanggapan t 
+                             JOIN petugas p ON t.id_petugas = p.id_petugas 
+                             WHERE t.id_laporan='$id' ORDER BY t.tgl_tanggapan DESC";
+                    $queryt = mysqli_query($conn, $sqlt);
+                    
+                    if(mysqli_num_rows($queryt) > 0) {
+                        while($t = mysqli_fetch_assoc($queryt)){
+                    ?>
+                        <div class="card border-0 shadow-sm mb-3">
+                            <div class="card-body p-3">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <strong class="text-primary"><i class="fas fa-user-tie"></i> <?= $t['nama_petugas']; ?></strong>
+                                    <small class="text-muted"><?= $t['tgl_tanggapan']; ?></small>
+                                </div>
+                                <p class="mb-0 text-dark"><?= $t['tanggapan']; ?></p>
+                            </div>
+                        </div>
+                    <?php 
+                        }
+                    } else {
+                        echo "<div class='text-muted fst-italic'>Belum ada tanggapan dari petugas.</div>";
+                    }
+                    ?>
+                    
+                    <?php if (isset($_SESSION['role']) && ($_SESSION['role'] == 'admin' || $_SESSION['role'] == 'petugas')): ?>
+                        <hr>
+                        <form action="proses_tanggapan.php" method="POST">
+                            <input type="hidden" name="id_laporan" value="<?= $id; ?>">
+                            <div class="mb-2">
+                                <label class="fw-bold small">Beri Tanggapan:</label>
+                                <textarea name="tanggapan" class="form-control" rows="3" required></textarea>
+                            </div>
+                            <button type="submit" name="kirim_tanggapan" class="btn btn-primary btn-sm">
+                                <i class="fas fa-paper-plane"></i> Kirim Tanggapan
+                            </button>
+                        </form>
+                    <?php endif; ?>
+                </div>
             </div>
-
-            <div class="form-group">
-                <label>Catatan</label>
-                <textarea name="catatan" class="form-control" rows="3"></textarea>
-            </div>
-
-            <div class="form-group">
-                <label>Bukti (opsional)</label>
-                <input type="file" name="bukti" class="form-control-file">
-            </div>
-
-            <button type="submit" name="simpan_status" class="btn btn-primary">
-                Simpan Perubahan
-            </button>
-            <a href="index.php" class="btn btn-secondary">Kembali</a>
-        </form>
-    <?php endif; ?>
-
-    <hr>
-    <h5>Riwayat Status</h5>
-    <?php
-    $qT = "SELECT t.*, p.nama_petugas 
-           FROM tanggapan t
-           JOIN petugas p ON t.id_petugas = p.id_petugas
-           WHERE t.id_laporan = '$id_laporan'
-           ORDER BY t.waktu_tanggapan ASC";
-    $rT = mysqli_query($conn, $qT);
-    ?>
-
-    <ul class="list-group">
-        <?php while ($t = mysqli_fetch_assoc($rT)) : ?>
-            <li class="list-group-item">
-                <b><?= $t['waktu_tanggapan']; ?> - <?= $t['status_set']; ?></b><br>
-                Petugas: <?= $t['nama_petugas']; ?><br>
-                Catatan: <?= nl2br($t['catatan']); ?><br>
-                <?php if (!empty($t['bukti'])): ?>
-                    Bukti: <a href="upload/<?= $t['bukti']; ?>" target="_blank">Lihat</a>
-                <?php endif; ?>
-            </li>
-        <?php endwhile; ?>
-    </ul>
-
+        </div>
+    </div>
 </div>
-</body>
-</html>
+
+</div> <footer>
+    <div class="container"><small>&copy; 2024 LAPOR!</small></div>

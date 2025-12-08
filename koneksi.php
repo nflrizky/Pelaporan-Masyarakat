@@ -1,14 +1,12 @@
 <?php
-// JANGAN ada session_start() di sini
-
 $host = "localhost";
 $user = "root";
 $pass = "";
-$db   = "pelaporan_masyarakat"; // sesuaikan
+$db   = "pelaporan_masyarakat"; // Sesuaikan nama database
 
-$conn = new mysqli($host, $user, $pass, $db);
+$conn = mysqli_connect($host, $user, $pass, $db);
 
-if ($conn->connect_error) {
-    die("Koneksi gagal: " . $conn->connect_error);
+if (!$conn) {
+    die("Koneksi gagal: " . mysqli_connect_error());
 }
 ?>

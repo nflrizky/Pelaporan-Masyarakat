@@ -137,7 +137,11 @@ if (isset($_POST['login'])) {
                 <button type="submit" name="login" class="btn btn-biru w-100 py-2">MASUK</button>
             </form>
             
-            <div class="text-center mt-4">
+            <div class="text-center mt-3">
+                <p class="small text-muted mb-0">Belum punya akun?</p>
+                <a href="register.php" class="text-decoration-none fw-bold text-biru">Daftar Sekarang</a>
+            </div>
+            <div class="text-center mt-4 border-top pt-3">
                 <a href="index.php" class="text-decoration-none text-secondary small">
                     <i class="fas fa-arrow-left"></i> Kembali ke Beranda
                 </a>

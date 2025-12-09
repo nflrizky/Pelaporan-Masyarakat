@@ -1,0 +1,75 @@
+-- 1. Buat Database
+CREATE DATABASE IF NOT EXISTS pelaporan_masyarakat;
+USE pelaporan_masyarakat;
+
+-- 2. Tabel Masyarakat
+CREATE TABLE IF NOT EXISTS masyarakat (
+    nik CHAR(16) NOT NULL,
+    nama VARCHAR(255) NOT NULL,
+    username VARCHAR(255) NULL, -- Opsional, untuk fleksibilitas login
+    password VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    alamat TEXT NOT NULL,
+    no_hp VARCHAR(15) NOT NULL, -- Sesuai register.php (skenario 1)
+    PRIMARY KEY (nik)
+) ENGINE=InnoDB;
+
+-- 3. Tabel Petugas
+CREATE TABLE IF NOT EXISTS petugas (
+    id_petugas INT(11) AUTO_INCREMENT PRIMARY KEY,
+    nama_petugas VARCHAR(255) NOT NULL,
+    username VARCHAR(50) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    telp VARCHAR(15) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    role ENUM('admin', 'petugas') NOT NULL DEFAULT 'petugas'
+) ENGINE=InnoDB;
+
+-- 4. Tabel Kategori
+CREATE TABLE IF NOT EXISTS kategori (
+    id_kategori INT(11) AUTO_INCREMENT PRIMARY KEY,
+    jenis_laporan VARCHAR(255) NOT NULL
+) ENGINE=InnoDB;
+
+-- 5. Tabel Laporan
+CREATE TABLE IF NOT EXISTS laporan (
+    id_laporan INT(11) AUTO_INCREMENT PRIMARY KEY,
+    id_masyarakat CHAR(16) NOT NULL,
+    id_kategori INT(11) NOT NULL,
+    tgl_pengaduan DATE NOT NULL,
+    judul VARCHAR(255) NOT NULL,
+    deskripsi TEXT NOT NULL,
+    foto VARCHAR(255) DEFAULT NULL,
+    status VARCHAR(50) DEFAULT 'Diajukan', -- Diajukan, Proses, Selesai, Ditolak
+    lokasi TEXT NOT NULL,
+    tipe_laporan ENUM('Publik', 'Rahasia') DEFAULT 'Publik',
+    FOREIGN KEY (id_masyarakat) REFERENCES masyarakat(nik) ON DELETE CASCADE,
+    FOREIGN KEY (id_kategori) REFERENCES kategori(id_kategori) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 6. Tabel Tanggapan
+CREATE TABLE IF NOT EXISTS tanggapan (
+    id_tanggapan INT(11) AUTO_INCREMENT PRIMARY KEY,
+    id_laporan INT(11) NOT NULL,
+    id_petugas INT(11) NOT NULL,
+    waktu_tanggapan DATETIME NOT NULL,
+    status_set VARCHAR(50) NOT NULL, -- Status yang diset saat menanggapi
+    catatan TEXT NOT NULL,
+    bukti VARCHAR(255) DEFAULT NULL,
+    FOREIGN KEY (id_laporan) REFERENCES laporan(id_laporan) ON DELETE CASCADE,
+    FOREIGN KEY (id_petugas) REFERENCES petugas(id_petugas) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- 7. Insert Data Awal (Wajib ada untuk login pertama kali)
+
+-- Admin Default (Password: admin123)
+-- Harap ganti password ini nanti di halaman manajemen petugas jika fitur ubah password tersedia
+INSERT INTO petugas (nama_petugas, username, password, telp, email, role) 
+VALUES ('Administrator', 'admin', 'admin123', '081234567890', 'admin@lapor.id', 'admin');
+
+-- Kategori Awal
+INSERT INTO kategori (jenis_laporan) VALUES 
+('Infrastruktur'),
+('Bencana Alam'),
+('Pelayanan Publik'),
+('Keamanan & Ketertiban');
